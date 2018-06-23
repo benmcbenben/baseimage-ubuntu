@@ -1,16 +1,16 @@
 FROM scratch
 
-ADD ubuntu-xenial-core-cloudimg-amd64-root.tar.gz /
-ADD files /
+ADD ubuntu-bionic-core-cloudimg-amd64-root.tar.gz /
 
-RUN set -xe \
+ADD pre_install /
+
+RUN	set -xe \
 	echo '#!/bin/sh' > /usr/sbin/policy-rc.d && \
 	echo 'exit 101' >> /usr/sbin/policy-rc.d && \
 	chmod +x /usr/sbin/policy-rc.d && \
 	dpkg-divert --local --rename --add /sbin/initctl && \
 	cp -a /usr/sbin/policy-rc.d /sbin/initctl && \
 	sed -i 's/^exit.*/exit 0/' /sbin/initctl && \
-	echo 'docker' > /run/systemd/container && \
 	export DEBIAN_FRONTEND=noninteractive && \
 	export LC_ALL=C && \
 	export INITRD=no && \
@@ -19,6 +19,7 @@ RUN set -xe \
 	dpkg-divert --local --rename --add /usr/bin/ischroot && \
 	ln -sf /bin/true /usr/bin/ischroot && \
 	\
+	sed -i 's/^#\s*\(deb.*main restricted\)$/\1/g' /etc/apt/sources.list && \
 	sed -i 's/^#\s*\(deb.*universe\)$/\1/g' /etc/apt/sources.list && \
 	sed -i 's/^#\s*\(deb.*multiverse\)$/\1/g' /etc/apt/sources.list && \
 	apt-get update && \
@@ -27,10 +28,13 @@ RUN set -xe \
 		apt-transport-https \
 		ca-certificates \
 		dirmngr \
+		gnupg \
 		python3 \
 		runit && \
 	\
-	mkdir /etc/my_init.d && \
+	mkdir -p /etc/my_init.d && \
+	mkdir -p /etc/my_init.pre_shutdown.d && \
+	mkdir -p /etc/my_init.post_shutdown.d && \
 	mkdir /etc/container_environment && \
 	chmod 700 /etc/container_environment && \
 	echo -n no > /etc/container_environment/INITRD && \
@@ -61,9 +65,12 @@ RUN set -xe \
 	rm -rf /var/lib/apt/lists/* /tmp/* /var/tmp/* /var/cache/* && \
 	rm -f /var/log/dpkg.log /var/log/alternatives.log /var/log/bootstrap.log && \
 	rm -f /var/log/apt/history.log /var/log/apt/term.log && \
-	rm -rf /usr/share/man/* /usr/share/groff/* /usr/share/info/* && \
+	rm -rf /usr/share/groff/* /usr/share/info/* && \
 	rm -rf /usr/share/lintian/* /usr/share/linda/* && \
+	find /usr/share/man -type f -delete && \
 	find /usr/share/doc -not -type d -not -name 'copyright' -delete && \
 	find /usr/share/doc -type d -empty -delete
+
+ADD post_install /
 
 CMD ["/sbin/my_init"]
