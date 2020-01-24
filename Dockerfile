@@ -28,6 +28,7 @@ RUN	set -xe \
 		dirmngr \
 		gnupg \
 		python3 \
+                rsync \
 		runit && \
 	\
 	mkdir -p /etc/my_init.d && \
@@ -69,7 +70,10 @@ RUN	set -xe \
 	find /usr/share/doc -not -type d -not -name 'copyright' -delete && \
 	find /usr/share/doc -type d -empty -delete
 
-#ADD post_install /
-COPY post_install/* /
+# We simply add this directly, as it has symlinks that cause buildx to error out.
+# ADD post_install /
+COPY post_install/ /post_install
+
+RUN cp -r /post_install/etc/service/* /etc/service/ && rm -rf /post_install/etc/service && cp -r /post_install/* / && rm -rf /post_install
 
 CMD ["/sbin/my_init"]
