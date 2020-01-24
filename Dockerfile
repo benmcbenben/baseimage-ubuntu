@@ -69,6 +69,7 @@ RUN	set -xe \
 	find /usr/share/doc -not -type d -not -name 'copyright' -delete && \
 	find /usr/share/doc -type d -empty -delete
 
-ADD post_install /
+#ADD post_install /
+COPY post_install/* /
 
 CMD ["/sbin/my_init"]
