@@ -70,7 +70,7 @@ RUN	set -xe \
 	find /usr/share/doc -not -type d -not -name 'copyright' -delete && \
 	find /usr/share/doc -type d -empty -delete
 
-# We simply add this directly, as it has symlinks that cause buildx to error out.
+# We cannot simply add this directly, as it has symlinks that cause buildx to error out.
 # ADD post_install /
 COPY post_install/ /post_install
 
